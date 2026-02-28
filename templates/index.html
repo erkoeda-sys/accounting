@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>会計基準 AIチャットボット</title>
+  <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+  <div class="layout">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <div class="logo">
+          <span class="logo-icon">📊</span>
+          <span class="logo-text">会計基準 AI</span>
+        </div>
+      </div>
+
+      <div class="sidebar-section">
+        <h3 class="section-title">参照中の会計基準</h3>
+        <ul class="pdf-list" id="pdfList">
+          {% if loaded_pdfs %}
+            {% for pdf in loaded_pdfs %}
+            <li class="pdf-item">
+              <span class="pdf-icon">📄</span>
+              <span class="pdf-name" title="{{ pdf.name }}">{{ pdf.name }}</span>
+            </li>
+            {% endfor %}
+          {% else %}
+            <li class="pdf-item pdf-empty">
+              <span class="pdf-icon">⚠️</span>
+              <span class="pdf-name">PDFが見つかりません</span>
+            </li>
+          {% endif %}
+        </ul>
+        <button class="btn-reload" id="reloadBtn" title="PDFを再読み込み">
+          <span id="reloadIcon">↺</span> 再読み込み
+        </button>
+      </div>
+
+      <div class="sidebar-section">
+        <h3 class="section-title">質問例</h3>
+        <ul class="example-list">
+          <li class="example-item" onclick="insertExample(this)">リース資産の会計処理について教えてください</li>
+          <li class="example-item" onclick="insertExample(this)">棚卸資産の評価方法はどのように選択しますか？</li>
+          <li class="example-item" onclick="insertExample(this)">引当金を計上する要件を説明してください</li>
+          <li class="example-item" onclick="insertExample(this)">収益認識の5ステップを説明してください</li>
+        </ul>
+      </div>
+    </aside>
+
+    <!-- Main content -->
+    <main class="main">
+      <header class="main-header">
+        <h1 class="header-title">会計基準 AIチャットボット</h1>
+        <p class="header-subtitle">会計基準に基づいた適切な会計処理をAIがご案内します</p>
+      </header>
+
+      <div class="chat-container" id="chatContainer">
+        <div class="welcome-message" id="welcomeMessage">
+          <div class="welcome-icon">📊</div>
+          <h2>会計処理についてご質問ください</h2>
+          <p>
+            読み込まれた会計基準PDFをもとに、適切な会計処理についてお答えします。<br>
+            具体的な取引や状況を教えていただくと、より詳しい回答が可能です。
+          </p>
+        </div>
+      </div>
+
+      <div class="input-area">
+        <div class="input-wrapper">
+          <textarea
+            id="userInput"
+            class="user-input"
+            placeholder="会計処理について質問してください..."
+            rows="1"
+            maxlength="2000"
+          ></textarea>
+          <button class="send-btn" id="sendBtn" disabled>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <line x1="22" y1="2" x2="11" y2="13"></line>
+              <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+            </svg>
+          </button>
+        </div>
+        <p class="input-note">Enter で送信 / Shift+Enter で改行 / 最大2,000文字</p>
+      </div>
+    </main>
+  </div>
+
+  <script src="/static/js/chat.js"></script>
+</body>
+</html>

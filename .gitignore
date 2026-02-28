@@ -1,0 +1,17 @@
+# Environment
+.env
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+env/
+
+# PDFs (large binary files - add your own)
+pdfs/*.pdf
+
+# OS
+.DS_Store
+Thumbs.db
