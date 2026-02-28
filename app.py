@@ -2,6 +2,7 @@ import os
 import json
 import pdfplumber
 import anthropic
+from functools import wraps
 from flask import Flask, render_template, request, jsonify, Response, stream_with_context
 from dotenv import load_dotenv
 
@@ -28,6 +29,32 @@ SYSTEM_PROMPT_TEMPLATE = """あなたは会計基準の専門家AIアシスタ�
 {pdf_context}
 """
 
+
+# ===== Basic Auth =====
+
+def _check_auth(username: str, password: str) -> bool:
+    expected_user = os.environ.get("BASIC_AUTH_USER", "")
+    expected_pass = os.environ.get("BASIC_AUTH_PASS", "")
+    if not expected_user or not expected_pass:
+        return True  # auth not configured → allow all
+    return username == expected_user and password == expected_pass
+
+
+def require_auth(f):
+    @wraps(f)
+    def decorated(*args, **kwargs):
+        auth = request.authorization
+        if not auth or not _check_auth(auth.username, auth.password):
+            return Response(
+                "ログインが必要です",
+                401,
+                {"WWW-Authenticate": 'Basic realm="会計基準 AI"'},
+            )
+        return f(*args, **kwargs)
+    return decorated
+
+
+# ===== PDF loading =====
 
 def load_pdfs() -> None:
     global pdf_texts
@@ -65,13 +92,17 @@ def build_system_prompt() -> str:
 load_pdfs()
 
 
+# ===== Routes =====
+
 @app.route("/")
+@require_auth
 def index():
     loaded = [{"name": name, "chars": len(text)} for name, text in pdf_texts.items()]
     return render_template("index.html", loaded_pdfs=loaded)
 
 
 @app.route("/api/chat", methods=["POST"])
+@require_auth
 def chat():
     data = request.get_json(silent=True) or {}
     messages = data.get("messages", [])
@@ -108,6 +139,7 @@ def chat():
 
 
 @app.route("/api/pdfs", methods=["GET"])
+@require_auth
 def list_pdfs():
     return jsonify(
         [{"name": name, "chars": len(text)} for name, text in pdf_texts.items()]
@@ -115,6 +147,7 @@ def list_pdfs():
 
 
 @app.route("/api/reload", methods=["POST"])
+@require_auth
 def reload_pdfs():
     load_pdfs()
     return jsonify(
@@ -123,4 +156,5 @@ def reload_pdfs():
 
 
 if __name__ == "__main__":
-    app.run(debug=True, host="0.0.0.0", port=5000)
+    port = int(os.environ.get("PORT", 5000))
+    app.run(host="0.0.0.0", port=port)
